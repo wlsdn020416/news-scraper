@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ad76869-ac02-4ed1-8dfb-a4ded409cd3d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/oop/search/domain/NewsCategory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/oop/search/application/NewsProvider.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +20,7 @@
       <list>
         <option value="Record" />
         <option value="Enum" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -103,7 +103,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1782350492449</updated>
-      <workItem from="1782350493442" duration="3292000" />
+      <workItem from="1782350493442" duration="3636000" />
     </task>
     <servers />
   </component>
