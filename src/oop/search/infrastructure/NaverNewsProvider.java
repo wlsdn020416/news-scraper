@@ -4,7 +4,8 @@ import oop.search.application.NewsProvider;
 import oop.search.domain.NewsCategory;
 import oop.search.domain.NewsResult;
 
-import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 
 public class NaverNewsProvider extends AbstractHttpScraper{
@@ -24,6 +25,16 @@ public class NaverNewsProvider extends AbstractHttpScraper{
 
     @Override
     public List<NewsResult> fetchNews(String searchQuery, int limit) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .build();
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return List.of();
     }
 
