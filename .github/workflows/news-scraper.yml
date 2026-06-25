@@ -38,7 +38,7 @@ jobs:
           echo "환경 점검 완료"
         env:
           NEWS_QUERY: ${{ vars.NEWS_QUERY }}
-          NEWS_LIMIT: ${{ vars.NEWS_LIMIT }}
+          NEWS_LIMIT: ${{ vars.NEWS_LIMIT || vars.NEWS_DISPLAY || '10' }}
 
       - name: 소스 컴파일
         run: |
@@ -62,5 +62,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 자동으로 들어가는 값 1
           GITHUB_REPOSITORY: ${{ github.repository }} # 자동으로 들어가는 값 2
           NEWS_QUERY: ${{ vars.NEWS_QUERY }}
-          NEWS_LIMIT: ${{ vars.NEWS_LIMIT }}
+          NEWS_LIMIT: ${{ vars.NEWS_LIMIT || vars.NEWS_DISPLAY || '10' }}
           NEWS_CATEGORY: ${{ vars.NEWS_CATEGORY }}
