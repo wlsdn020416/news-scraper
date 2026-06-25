@@ -19,25 +19,16 @@ public class GitHubNewsPublisher extends AbstractHttpClient implements NewsPubli
 
     public GitHubNewsPublisher() {
         super(GITHUB_API_URL
-                .formatted(System.getenv("GITHUB_REPOSITORY"))
+                .formatted(requireEnv("GITHUB_REPOSITORY"))
         );
-        this.token = System.getenv("GITHUB_TOKEN");
+        this.token = requireEnv("GITHUB_TOKEN");
     }
 
     @Override
     public void publish(String topic, List<NewsResult> newsResults) {
 //        httpClient
         String url = endpoint;
-        String payload = """
-                {
-                "title": "%s",
-                "body": "%s"
-                }
-                """.formatted(
-                // %s -> topic. %s -> 한국기준 현재 시간
-                "%s (%s)".formatted(topic, ZonedDateTime.now(ZoneId.of("Asia/Seoul"))),
-                newsResults
-        ).trim();
+        String payload = buildPayload(topic, newsResults);
         HttpRequest request = HttpRequest.newBuilder()
 //                .GET()
                 .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
@@ -50,13 +41,55 @@ public class GitHubNewsPublisher extends AbstractHttpClient implements NewsPubli
                 .build();
 
         try {
-            httpClient.send(
+            HttpResponse<String> response = httpClient.send(
                     request,
                     HttpResponse.BodyHandlers.ofString()
             );
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new IllegalStateException("GitHub issue 생성 실패: HTTP " + response.statusCode() + " - " + response.body());
+            }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalStateException("뉴스 발행 중 오류가 발생했습니다.", e);
         }
+    }
+
+    String buildPayload(String topic, List<NewsResult> newsResults) {
+        String title = "%s (%s)".formatted(topic, ZonedDateTime.now(ZoneId.of("Asia/Seoul")));
+        String body = buildIssueBody(newsResults);
+        return """
+                {
+                  "title": "%s",
+                  "body": "%s"
+                }
+                """.formatted(escapeJson(title), escapeJson(body)).trim();
+    }
+
+    private String buildIssueBody(List<NewsResult> newsResults) {
+        StringBuilder body = new StringBuilder();
+        for (NewsResult newsResult : newsResults) {
+            body.append("## ").append(newsResult.title()).append('\n')
+                    .append("- 링크: ").append(newsResult.url()).append('\n')
+                    .append("- 발행일자: ").append(newsResult.pubDate()).append('\n')
+                    .append("- 설명: ").append(newsResult.description()).append("\n\n");
+        }
+        return body.toString().trim();
+    }
+
+    private String escapeJson(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
+    private static String requireEnv(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(name + " 환경변수가 필요합니다.");
+        }
+        return value;
     }
 }

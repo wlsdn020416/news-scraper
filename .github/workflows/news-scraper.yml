@@ -34,11 +34,11 @@ jobs:
           echo "환경 점검 시작..."
           java -version
           echo "NEWS_QUERY: ${NEWS_QUERY}"
-          echo "NEWS_DISPLAY: ${NEWS_DISPLAY}"
+          echo "NEWS_LIMIT: ${NEWS_LIMIT}"
           echo "환경 점검 완료"
         env:
           NEWS_QUERY: ${{ vars.NEWS_QUERY }}
-          NEWS_DISPLAY: ${{ vars.NEWS_DISPLAY }}
+          NEWS_LIMIT: ${{ vars.NEWS_LIMIT }}
 
       - name: 소스 컴파일
         run: |
@@ -54,13 +54,13 @@ jobs:
         #          echo "이슈 생성 작업 종료"
         run: |
           echo "뉴스 수집 및 이슈 생성 시작..."
-                java -cp out oop.search.presentation.GitHubNewsApp
-                echo "이슈 생성 작업 종료"
+          java -cp out oop.search.presentation.GitHubNewsApp
+          echo "이슈 생성 작업 종료"
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 자동으로 들어가는 값 1
           GITHUB_REPOSITORY: ${{ github.repository }} # 자동으로 들어가는 값 2
           NEWS_QUERY: ${{ vars.NEWS_QUERY }}
-          NEWS_DISPLAY: ${{ vars.NEWS_DISPLAY }}
+          NEWS_LIMIT: ${{ vars.NEWS_LIMIT }}
           NEWS_CATEGORY: ${{ vars.NEWS_CATEGORY }}

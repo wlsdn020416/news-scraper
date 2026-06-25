@@ -11,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 //public class NaverNewsProvider extends AbstractHttpScraper {
 public class NaverNewsProvider extends AbstractHttpClient implements NewsProvider {
@@ -26,17 +27,21 @@ public class NaverNewsProvider extends AbstractHttpClient implements NewsProvide
     // clientId, clientSecret, category
     public NaverNewsProvider() {
         super(NEWS_API_URL);
-        this.clientId = System.getenv("NAVER_CLIENT_ID");
-        this.clientSecret = System.getenv("NAVER_CLIENT_SECRET");
-        this.category = NewsCategory.valueOf(System.getenv("NEWS_CATEGORY"));
+        this.clientId = requireEnv("NAVER_CLIENT_ID");
+        this.clientSecret = requireEnv("NAVER_CLIENT_SECRET");
+        this.category = resolveCategory(System.getenv("NEWS_CATEGORY"));
         // SIM, DATE -> 변환 (Enum - NewsCategory.SIM, NewsCategory.DATE)
-        System.out.println("clientId = " + clientId.substring(0, 3) + "...");
-        System.out.println("clientSecret = " + clientSecret.substring(0, 3) + "...");
         System.out.println("category = " + category);
     }
 
     @Override
     public List<NewsResult> fetchNews(String searchQuery, int limit) {
+        if (searchQuery == null || searchQuery.isBlank()) {
+            throw new IllegalArgumentException("검색어를 입력해주세요.");
+        }
+        if (limit <= 0 || limit > 100) {
+            throw new IllegalArgumentException("검색 건수는 1부터 100 사이여야 합니다.");
+        }
         String url = endpoint + "?query="
                 + URLEncoder.encode(searchQuery, StandardCharsets.UTF_8)
                 + "&display=" + limit
@@ -56,39 +61,142 @@ public class NaverNewsProvider extends AbstractHttpClient implements NewsProvide
                     HttpResponse.BodyHandlers.ofString()
             );
             String body = response.body();
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new IllegalStateException("Naver API 요청 실패: HTTP " + response.statusCode() + " - " + body);
+            }
 //            System.out.println("body = " + body);
 
-            // items
-            String items = body.split("items")[1]; // 0 <-> 1
-            // <- items ->
-//            System.out.println("items = " + items);
-            String[] itemArr = items.split("},");
-            for (String item : itemArr) {
-//                System.out.println("item = " + item);
-//                String title = item
-//                        .split("\"title\":\"")[1] // 0 <-> 1 -> ["title":"]
-//                        .split("\",")[0]; // ",
-                String title = cutText(item, "\"title\":\"", "\",\n");
-                String link = cutText(item, "\"link\":\"", "\",\n");
-                String description = cutText(item, "\"description\":\"", "\",\n");
-                // pubDate는 문자열 ""가 추가적으로 들어갈 염려가 없기 때문에 바로 "로 구분
-                String pubDate = cutText(item, "\"description\":\"", "\"");
-                NewsResult result = new NewsResult(title, description, link, pubDate);
-                results.add(result);
-            }
+            results.addAll(parseNewsResults(body));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalStateException("뉴스 검색 중 오류가 발생했습니다.", e);
         }
 
 //        return List.of();
         return results;
     }
 
-    public String cutText(String original, String prefix, String suffix) {
-        return original
-                .split(prefix)[1]
-                .split(suffix)[0];
+    List<NewsResult> parseNewsResults(String body) {
+        List<NewsResult> results = new ArrayList<>();
+        for (String item : extractItemObjects(body)) {
+            results.add(new NewsResult(
+                    getJsonString(item, "title"),
+                    getJsonString(item, "description"),
+                    getJsonString(item, "link"),
+                    getJsonString(item, "pubDate")
+            ));
+        }
+        return results;
+    }
+
+    private List<String> extractItemObjects(String body) {
+        int itemsKey = body.indexOf("\"items\"");
+        if (itemsKey < 0) {
+            return List.of();
+        }
+        int arrayStart = body.indexOf('[', itemsKey);
+        if (arrayStart < 0) {
+            return List.of();
+        }
+
+        List<String> items = new ArrayList<>();
+        boolean inString = false;
+        boolean escaped = false;
+        int objectDepth = 0;
+        int objectStart = -1;
+
+        for (int i = arrayStart + 1; i < body.length(); i++) {
+            char current = body.charAt(i);
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (current == '\\') {
+                    escaped = true;
+                } else if (current == '"') {
+                    inString = false;
+                }
+                continue;
+            }
+            if (current == '"') {
+                inString = true;
+            } else if (current == '{') {
+                if (objectDepth == 0) {
+                    objectStart = i;
+                }
+                objectDepth++;
+            } else if (current == '}') {
+                objectDepth--;
+                if (objectDepth == 0 && objectStart >= 0) {
+                    items.add(body.substring(objectStart, i + 1));
+                    objectStart = -1;
+                }
+            } else if (current == ']' && objectDepth == 0) {
+                break;
+            }
+        }
+        return items;
+    }
+
+    private String getJsonString(String object, String key) {
+        String keyToken = "\"" + key + "\"";
+        int keyIndex = object.indexOf(keyToken);
+        if (keyIndex < 0) {
+            return "";
+        }
+        int colonIndex = object.indexOf(':', keyIndex + keyToken.length());
+        if (colonIndex < 0) {
+            return "";
+        }
+        int valueStart = object.indexOf('"', colonIndex + 1);
+        if (valueStart < 0) {
+            return "";
+        }
+
+        StringBuilder value = new StringBuilder();
+        boolean escaped = false;
+        for (int i = valueStart + 1; i < object.length(); i++) {
+            char current = object.charAt(i);
+            if (escaped) {
+                value.append(unescape(current));
+                escaped = false;
+            } else if (current == '\\') {
+                escaped = true;
+            } else if (current == '"') {
+                return value.toString();
+            } else {
+                value.append(current);
+            }
+        }
+        return value.toString();
+    }
+
+    private char unescape(char current) {
+        return switch (current) {
+            case '"' -> '"';
+            case '\\' -> '\\';
+            case '/' -> '/';
+            case 'b' -> '\b';
+            case 'f' -> '\f';
+            case 'n' -> '\n';
+            case 'r' -> '\r';
+            case 't' -> '\t';
+            default -> current;
+        };
+    }
+
+    private static String requireEnv(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(name + " 환경변수가 필요합니다.");
+        }
+        return value;
+    }
+
+    private static NewsCategory resolveCategory(String rawCategory) {
+        if (rawCategory == null || rawCategory.isBlank()) {
+            return NewsCategory.DATE;
+        }
+        return NewsCategory.valueOf(rawCategory.trim().toUpperCase(Locale.ROOT));
     }
 
     public static void main(String[] args) {

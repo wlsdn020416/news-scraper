@@ -11,8 +11,8 @@ public class GitHubNewsApp {
         this.newsService = newsService;
     }
 
-    public void run() {
-
+    public void run(String keyword, int limit) {
+        newsService.search(keyword, limit);
     }
 
     public static void main(String[] args) {
@@ -22,6 +22,8 @@ public class GitHubNewsApp {
                 new GitHubNewsPublisher()
         );
         GitHubNewsApp app = new GitHubNewsApp(newsService);
-        app.run();
+        String keyword = args.length > 0 ? args[0] : System.getenv().getOrDefault("NEWS_QUERY", "AI");
+        int limit = args.length > 1 ? Integer.parseInt(args[1]) : Integer.parseInt(System.getenv().getOrDefault("NEWS_LIMIT", "10"));
+        app.run(keyword, limit);
     }
 }

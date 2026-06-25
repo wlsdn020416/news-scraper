@@ -22,10 +22,16 @@ public class ConsoleNewsApp {
                 break;
             }
             System.out.println("[몇 건 검색하시겠습니까? (양의 정수)]");
-            int limit = sc.nextInt();
-            sc.nextLine(); // 버퍼 비우기를 안하면 이후 다음 nextLine 호출 시 엔터키 입력으로 인한 빈 문자열 입력
-            newsService.search(keyword, limit);
-            System.out.println("[검색이 완료 되었습니다]");
+            String limitInput = sc.nextLine().trim();
+            try {
+                int limit = Integer.parseInt(limitInput);
+                newsService.search(keyword, limit);
+                System.out.println("[검색이 완료 되었습니다]");
+            } catch (NumberFormatException e) {
+                System.out.println("[검색 건수는 숫자로 입력해주세요]");
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                System.out.println("[오류] " + e.getMessage());
+            }
         }
     }
 
