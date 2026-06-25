@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ad76869-ac02-4ed1-8dfb-a4ded409cd3d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/oop/search/application/NewsPublisher.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/oop/search/application/NewsService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +21,7 @@
         <option value="Record" />
         <option value="Enum" />
         <option value="Interface" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -103,7 +104,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1782350492449</updated>
-      <workItem from="1782350493442" duration="4187000" />
+      <workItem from="1782350493442" duration="4506000" />
     </task>
     <servers />
   </component>
