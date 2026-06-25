@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ad76869-ac02-4ed1-8dfb-a4ded409cd3d" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/oop/search/infrastructure/AbstractHttpScraper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/oop/search/infrastructure/AbstractHttpScraper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/oop/search/infrastructure/NaverNewsProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/oop/search/infrastructure/NaverNewsProvider.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +123,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1782350492449</updated>
-      <workItem from="1782350493442" duration="7748000" />
+      <workItem from="1782350493442" duration="8236000" />
     </task>
     <servers />
   </component>
